@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: data_finlink  # Alias utilisez dans dbt
+    database: finlink-062026  # ID projet Google Cloud
+    schema: finlink_payments  # Dataset contenant les tables
+    tables:
+      - name: transactions
+      - name: ip_geolocation
+      - name: logs_litiges
+      - name: base_crm_clients
