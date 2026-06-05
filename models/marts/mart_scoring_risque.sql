@@ -80,16 +80,18 @@ SELECT
                 NULLIF(t.nb_transactions, 0) * 100 * 0.1
         ), 2
     )                                               AS score_risque_global,
-    CASE
-        WHEN c.taux_litiges_pct >= 20
-          OR t.score_risque_moyen >= 70
-          OR t.nb_transactions_vpn >= 3             THEN 'Critique'
-        WHEN c.taux_litiges_pct >= 10
-          OR t.score_risque_moyen >= 50             THEN 'Élevé'
-        WHEN c.taux_litiges_pct >= 5
-          OR t.score_risque_moyen >= 30             THEN 'Modéré'
-        ELSE                                             'Faible'
-    END                                             AS categorie_risque
+    COALESCE(
+        CASE
+            WHEN c.taux_litiges_pct >= 20
+              OR t.score_risque_moyen >= 70
+              OR t.nb_transactions_vpn >= 3   THEN 'Critique'
+            WHEN c.taux_litiges_pct >= 10
+              OR t.score_risque_moyen >= 50   THEN 'Élevé'
+            WHEN c.taux_litiges_pct >= 5
+              OR t.score_risque_moyen >= 30   THEN 'Modéré'
+            ELSE                                   'Faible'
+        END,
+    'Faible')                                       AS categorie_risque
 FROM clients c
 LEFT JOIN transactions_par_client t ON c.client_id = t.client_id
 LEFT JOIN litiges_par_client l      ON c.client_id = l.client_id
