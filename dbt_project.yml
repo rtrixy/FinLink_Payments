@@ -21,8 +21,9 @@ clean-targets:
 models:
   FinLink_Payments:
     staging:
-      +materialized: view       # Les staging = vues légères
-      
+      +materialized: view
+    intermediate:
+      +materialized: view
     marts:
-      +materialized: table      # Les marts = tables persistantes pour Power BI
+      +materialized: table
       
