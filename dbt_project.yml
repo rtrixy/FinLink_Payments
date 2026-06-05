@@ -22,7 +22,7 @@ models:
   FinLink_Payments:
     staging:
       +materialized: view       # Les staging = vues légères
-      +schema: staging
+      
     marts:
       +materialized: table      # Les marts = tables persistantes pour Power BI
-      +schema: marts
+      
