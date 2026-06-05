@@ -1,9 +1,13 @@
-{{ config(materialized='table') }}
-
-with source_data as (
-    select * from {{ source('data_finlink', 'base_crm_clients') }}
-),
-final as (
-    select * from source_data
+WITH source AS (
+    SELECT * FROM {{ source('data_finlink', 'base_crm_clients') }}
 )
-select * from final
+
+SELECT
+    client_id,
+    CAST(anciennete_jours AS INT64)                         AS anciennete_jours,
+    CAST(nb_achats_historique AS INT64)                     AS nb_achats_historique,
+    CAST(taux_litiges_pct AS FLOAT64)                       AS taux_litiges_pct,
+    segment_client,
+    CAST(date_inscription AS DATE)                          AS date_inscription
+FROM source
+WHERE CAST(taux_litiges_pct AS FLOAT64) <= 100
