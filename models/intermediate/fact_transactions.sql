@@ -9,7 +9,12 @@ dim_geo AS (
 
 dim_cli AS (
     SELECT * FROM {{ ref('dim_clients') }}
+),
+
+litiges AS (
+    SELECT DISTINCT transaction_id FROM {{ ref('logs_litiges_staging') }}
 )
+
 
 SELECT
     -- Clés
@@ -50,8 +55,10 @@ SELECT
     -- Flags transaction
     CASE WHEN t.score_risque >= 70 THEN TRUE ELSE FALSE END AS est_haut_risque,
     CASE WHEN t.statut = 'refuse'  THEN TRUE ELSE FALSE END AS est_refuse,
-    CASE WHEN t.statut = 'approuve' THEN TRUE ELSE FALSE END AS est_approuve
-
+    CASE WHEN t.statut = 'approuve' THEN TRUE ELSE FALSE END AS est_approuve,
+    CASE WHEN lt.transaction_id IS NOT NULL THEN TRUE ELSE FALSE END AS a_genere_litige
+    
 FROM transactions t
 LEFT JOIN dim_geo g ON t.ip_id      = g.ip_id
 LEFT JOIN dim_cli c ON t.client_id  = c.client_id
+LEFT JOIN litiges lt ON t.transaction_id = lt.transaction_id
