@@ -1,4 +1,6 @@
--- Dimension clients enrichie avec catégorie ancienneté
+-- models/intermediate/dim_clients.sql
+-- Dimension clients enrichie : quartiles d'ancienneté + risque historique
+
 WITH source AS (
     SELECT * FROM {{ ref('base_crm_clients_staging') }}
 )
@@ -11,7 +13,13 @@ SELECT
     taux_litiges_pct,
     date_inscription,
 
-    -- Catégorie ancienneté (quartiles métier)
+    -- Quartile statistique d'ancienneté (NTILE : 4 groupes d'effectifs
+    -- égaux ; quartile 1 = les 25 % de clients les plus récents).
+    -- Répond directement à la question Axe 1.2 : « quel quartile de
+    -- nouveaux clients présente le taux de litige le plus élevé ? »
+    NTILE(4) OVER (ORDER BY anciennete_jours) AS quartile_anciennete,
+
+    -- Buckets métier (seuils fixes, lisibles) — complément Power BI
     CASE
         WHEN anciennete_jours <= 90  THEN 'Q1 — Très nouveau'
         WHEN anciennete_jours <= 365 THEN 'Q2 — Nouveau'
@@ -19,7 +27,7 @@ SELECT
         ELSE                              'Q4 — Fidèle'
     END AS categorie_anciennete,
 
-    -- Catégorie risque historique
+    -- Catégorie de risque historique (taux de litiges déclaré CRM)
     CASE
         WHEN taux_litiges_pct >= 20 THEN 'Risque élevé'
         WHEN taux_litiges_pct >= 10 THEN 'Risque modéré'

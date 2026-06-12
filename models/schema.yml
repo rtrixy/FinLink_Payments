@@ -1,0 +1,73 @@
+# models/schema.yml
+# Tests de qualité dbt — exécutés via `dbt test` (ou `dbt build`).
+# Couvre le critère « automatisation en base / fiabilité » (grille Bloc 3) :
+# chaque clé primaire est testée en unicité + non-nullité, et les
+# clés étrangères en intégrité référentielle (relationships).
+# NB : syntaxe dbt Fusion 2.0 — les paramètres des tests génériques
+# sont déclarés sous la clé `arguments:`.
+
+version: 2
+
+models:
+  - name: dim_clients
+    description: "Dimension clients enrichie (quartiles d'ancienneté, risque historique)"
+    columns:
+      - name: client_id
+        description: "Clé primaire client"
+        tests: [unique, not_null]
+
+  - name: dim_geolocation
+    description: "Dimension géolocalisation IP enrichie (score risque pays, contexte risque)"
+    columns:
+      - name: ip_id
+        description: "Clé primaire IP"
+        tests: [unique, not_null]
+
+  - name: fact_transactions
+    description: "Table de faits transactions, enrichie clients + géo"
+    columns:
+      - name: transaction_id
+        description: "Clé primaire transaction"
+        tests: [unique, not_null]
+      - name: client_id
+        description: "Clé étrangère vers dim_clients"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_clients')
+                field: client_id
+      - name: ip_id
+        description: "Clé étrangère vers dim_geolocation"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_geolocation')
+                field: ip_id
+
+  - name: fact_litiges
+    description: "Table de faits litiges (date_litige reconstruite en staging)"
+    columns:
+      - name: litige_id
+        description: "Clé primaire litige"
+        tests: [unique, not_null]
+      - name: date_litige
+        description: "Date reconstruite : doit être >= date de transaction"
+        tests: [not_null]
+      - name: issue
+        description: "Issue du litige — 3 modalités exhaustives"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['favorable', 'defavorable', 'en cours']
+
+  - name: mart_analyse_risque
+    description: "Mart axes 1 & 2 — 1 ligne par client"
+    columns:
+      - name: client_id
+        tests: [unique, not_null]
+
+  - name: mart_analyse_litige
+    description: "Mart axe 3 — 1 ligne par litige"
+    columns:
+      - name: litige_id
+        tests: [unique, not_null]

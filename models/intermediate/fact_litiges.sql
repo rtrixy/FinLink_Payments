@@ -23,6 +23,8 @@ SELECT
 
     -- Flag issue
     CASE WHEN l.issue = 'defavorable' THEN TRUE ELSE FALSE END AS est_defavorable,
+    CASE WHEN l.issue = 'favorable'   THEN TRUE ELSE FALSE END AS est_favorable,
+    CASE WHEN l.issue = 'en cours'    THEN TRUE ELSE FALSE END AS est_en_cours,
 
     -- Données transaction enrichies
     t.montant_eur               AS montant_transaction_eur,

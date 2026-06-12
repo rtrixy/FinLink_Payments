@@ -20,12 +20,12 @@ tx_par_client AS (
         taux_litiges_pct,
         categorie_risque_historique,
 
-        COUNT(transaction_id)                                               AS nb_transactions,
-        SUM(montant_eur)                                                    AS montant_total_eur,
-        AVG(score_risque)                                                   AS score_risque_moyen,
-        MAX(score_risque)                                                   AS score_risque_max,
-        SUM(CASE WHEN est_haut_risque  THEN 1 ELSE 0 END)                  AS nb_haut_risque,
-        SUM(CASE WHEN est_refuse       THEN 1 ELSE 0 END)                  AS nb_refusees,
+        COUNT(transaction_id)                                              AS nb_transactions,
+        SUM(montant_eur)                                                   AS montant_total_eur,
+        AVG(score_risque)                                                  AS score_risque_moyen,
+        MAX(score_risque)                                                  AS score_risque_max,
+        SUM(CASE WHEN est_haut_risque THEN 1 ELSE 0 END)                   AS nb_haut_risque,
+        SUM(CASE WHEN est_refuse THEN 1 ELSE 0 END)                        AS nb_refusees,
         SUM(CASE WHEN proxy_vpn_detecte THEN 1 ELSE 0 END)                 AS nb_vpn,
         SUM(CASE WHEN est_contexte_risque THEN 1 ELSE 0 END)               AS nb_contexte_risque,
         SUM(CASE WHEN categorie_device = 'Mobile' THEN 1 ELSE 0 END)       AS nb_transactions_mobile,
@@ -41,13 +41,14 @@ tx_par_client AS (
 lt_par_client AS (
     SELECT
         client_id,
-        COUNT(litige_id)                                                    AS nb_litiges,
-        SUM(montant_concerne_eur)                                           AS montant_total_litiges_eur,
-        AVG(montant_concerne_eur)                                           AS montant_moyen_litige_eur,
-        AVG(jours_apres_transaction)                                        AS delai_moyen_litige_jours,
-        SUM(CASE WHEN est_defavorable  THEN 1 ELSE 0 END)                  AS nb_defavorables,
-        SUM(CASE WHEN NOT est_defavorable THEN 1 ELSE 0 END)               AS nb_favorables,
-        MAX(date_litige)                                                    AS date_dernier_litige
+        COUNT(litige_id)                                                   AS nb_litiges,
+        SUM(montant_concerne_eur)                                          AS montant_total_litiges_eur,
+        AVG(montant_concerne_eur)                                          AS montant_moyen_litige_eur,
+        AVG(jours_apres_transaction)                                       AS delai_moyen_litige_jours,
+        SUM(CASE WHEN est_defavorable THEN 1 ELSE 0 END)                   AS nb_defavorables,
+        SUM(CASE WHEN est_favorable   THEN 1 ELSE 0 END)                   AS nb_favorables,
+        SUM(CASE WHEN est_en_cours   THEN 1 ELSE 0 END)                    AS nb_en_cours,
+        MAX(date_litige)                                                   AS date_dernier_litige
     FROM fact_lt
     GROUP BY client_id
 )
@@ -75,18 +76,18 @@ SELECT
 
     -- Litiges
     COALESCE(l.nb_litiges, 0)                   AS nb_litiges,
-    COALESCE(l.montant_total_litiges_eur, 0)     AS montant_total_litiges_eur,
-    COALESCE(l.montant_moyen_litige_eur, 0)      AS montant_moyen_litige_eur,
-    COALESCE(l.delai_moyen_litige_jours, 0)      AS delai_moyen_litige_jours,
-    COALESCE(l.nb_defavorables, 0)               AS nb_litiges_defavorables,
-    COALESCE(l.nb_favorables, 0)                 AS nb_litiges_favorables,
+    COALESCE(l.montant_total_litiges_eur, 0)    AS montant_total_litiges_eur,
+    COALESCE(l.montant_moyen_litige_eur, 0)     AS montant_moyen_litige_eur,
+    COALESCE(l.delai_moyen_litige_jours, 0)     AS delai_moyen_litige_jours,
+    COALESCE(l.nb_defavorables, 0)              AS nb_litiges_defavorables,
+    COALESCE(l.nb_favorables, 0)                AS nb_litiges_favorables,
     l.date_dernier_litige,
 
     -- Taux de litige calculé
     ROUND(
         COALESCE(l.nb_litiges, 0) /
         NULLIF(t.nb_transactions, 0) * 100, 2
-    )                                            AS taux_litige_pct,
+    )                                           AS taux_litige_reel_pct,
 
     -- Score de risque global pondéré
     ROUND(
@@ -96,7 +97,7 @@ SELECT
             COALESCE(l.nb_litiges, 0) / NULLIF(t.nb_transactions, 0) * 100 * 0.2 +
             t.nb_vpn / NULLIF(t.nb_transactions, 0) * 100 * 0.1
         ), 2
-    )                                            AS score_risque_global,
+    )                                           AS score_risque_global,
 
     -- Catégorie de risque
     CASE
@@ -108,8 +109,7 @@ SELECT
         WHEN t.taux_litiges_pct >= 5
           OR t.score_risque_moyen >= 30          THEN 'Modéré'
         ELSE                                          'Faible'
-    END                                          AS categorie_risque
+    END                                         AS categorie_risque
 
 FROM tx_par_client t
 LEFT JOIN lt_par_client l ON t.client_id = l.client_id
-ORDER BY score_risque_global DESC

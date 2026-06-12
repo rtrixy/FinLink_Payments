@@ -1,4 +1,3 @@
-{{ config(materialized='table') }}
 
 WITH source AS (
     SELECT * FROM {{ source('data_finlink', 'base_crm_clients') }}

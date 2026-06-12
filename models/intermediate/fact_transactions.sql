@@ -26,9 +26,9 @@ SELECT
 
     -- Catégorie device
     CASE
-        WHEN t.device_type IN ('mobile_ios', 'mobile_android') THEN 'Mobile'
-        WHEN t.device_type = 'desktop'                         THEN 'Desktop'
-        WHEN t.device_type = 'tablet'                          THEN 'Tablet'
+        WHEN device_type LIKE 'mobile%' THEN 'Mobile'
+        WHEN device_type LIKE 'tablet%' THEN 'Tablet'
+        WHEN device_type = 'desktop'    THEN 'Desktop'
         ELSE 'Autre'
     END AS categorie_device,
 
