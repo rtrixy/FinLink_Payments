@@ -1,6 +1,9 @@
 -- Mart principal : analyse du risque par client
--- Répond aux axes 1 & 2 de l'énoncé
+-- Répond aux axes 1 (Q1 segment, Q2 ancienneté)
 -- Granularité : 1 ligne par client
+-- NB : Q3 (device), Q4/Q5 (VPN/pays) sont calculées directement sur
+-- fact_transactions en DAX, pas ici : ce ne sont pas des analyses
+-- "par client", les pré-agréger ici aurait fait doublon inutile.
 
 WITH fact_tx AS (
     SELECT * FROM {{ ref('fact_transactions') }}
@@ -20,17 +23,11 @@ tx_par_client AS (
         taux_litiges_pct,
         categorie_risque_historique,
 
-        COUNT(transaction_id)                                              AS nb_transactions,
-        SUM(montant_eur)                                                   AS montant_total_eur,
-        AVG(score_risque)                                                  AS score_risque_moyen,
-        MAX(score_risque)                                                  AS score_risque_max,
-        SUM(CASE WHEN est_haut_risque THEN 1 ELSE 0 END)                   AS nb_haut_risque,
-        SUM(CASE WHEN est_refuse THEN 1 ELSE 0 END)                        AS nb_refusees,
-        SUM(CASE WHEN proxy_vpn_detecte THEN 1 ELSE 0 END)                 AS nb_vpn,
-        SUM(CASE WHEN est_contexte_risque THEN 1 ELSE 0 END)               AS nb_contexte_risque,
-        SUM(CASE WHEN categorie_device = 'Mobile' THEN 1 ELSE 0 END)       AS nb_transactions_mobile,
-        SUM(CASE WHEN categorie_device = 'Desktop' THEN 1 ELSE 0 END)      AS nb_transactions_desktop,
-        SUM(CASE WHEN categorie_device = 'Tablet' THEN 1 ELSE 0 END)       AS nb_transactions_tablet
+        COUNT(transaction_id)                              AS nb_transactions,
+        SUM(montant_eur)                                   AS montant_total_eur,
+        AVG(score_risque)                                  AS score_risque_moyen,
+        SUM(CASE WHEN est_haut_risque THEN 1 ELSE 0 END)   AS nb_haut_risque,
+        SUM(CASE WHEN est_refuse THEN 1 ELSE 0 END)        AS nb_refusees
     FROM fact_tx
     GROUP BY
         client_id, segment_client, anciennete_jours,
@@ -41,14 +38,11 @@ tx_par_client AS (
 lt_par_client AS (
     SELECT
         client_id,
-        COUNT(litige_id)                                                   AS nb_litiges,
-        SUM(montant_concerne_eur)                                          AS montant_total_litiges_eur,
-        AVG(montant_concerne_eur)                                          AS montant_moyen_litige_eur,
-        AVG(jours_apres_transaction)                                       AS delai_moyen_litige_jours,
-        SUM(CASE WHEN est_defavorable THEN 1 ELSE 0 END)                   AS nb_defavorables,
-        SUM(CASE WHEN est_favorable   THEN 1 ELSE 0 END)                   AS nb_favorables,
-        SUM(CASE WHEN est_en_cours   THEN 1 ELSE 0 END)                    AS nb_en_cours,
-        MAX(date_litige)                                                   AS date_dernier_litige
+        COUNT(litige_id)                                   AS nb_litiges,
+        SUM(montant_concerne_eur)                          AS montant_total_litiges_eur,
+        AVG(montant_concerne_eur)                          AS montant_moyen_litige_eur,
+        SUM(CASE WHEN est_defavorable THEN 1 ELSE 0 END)   AS nb_defavorables,
+        SUM(CASE WHEN est_favorable   THEN 1 ELSE 0 END)   AS nb_favorables
     FROM fact_lt
     GROUP BY client_id
 )
@@ -65,29 +59,22 @@ SELECT
     t.nb_transactions,
     t.montant_total_eur,
     t.score_risque_moyen,
-    t.score_risque_max,
     t.nb_haut_risque,
     t.nb_refusees,
-    t.nb_vpn,
-    t.nb_contexte_risque,
-    t.nb_transactions_mobile,
-    t.nb_transactions_desktop,
-    t.nb_transactions_tablet,
 
     -- Litiges
-    COALESCE(l.nb_litiges, 0)                   AS nb_litiges,
-    COALESCE(l.montant_total_litiges_eur, 0)    AS montant_total_litiges_eur,
-    COALESCE(l.montant_moyen_litige_eur, 0)     AS montant_moyen_litige_eur,
-    COALESCE(l.delai_moyen_litige_jours, 0)     AS delai_moyen_litige_jours,
-    COALESCE(l.nb_defavorables, 0)              AS nb_litiges_defavorables,
-    COALESCE(l.nb_favorables, 0)                AS nb_litiges_favorables,
-    l.date_dernier_litige,
+    COALESCE(l.nb_litiges, 0)                AS nb_litiges,
+    COALESCE(l.montant_total_litiges_eur, 0) AS montant_total_litiges_eur,
+    COALESCE(l.montant_moyen_litige_eur, 0)  AS montant_moyen_litige_eur,
+    COALESCE(l.nb_defavorables, 0)           AS nb_litiges_defavorables,
+    COALESCE(l.nb_favorables, 0)             AS nb_litiges_favorables,
 
-    -- Taux de litige calculé
+    -- Taux de litige réel recalculé (sert Q1 par segment, Q2 par quartile d'ancienneté)
+    -- Nommé "reel" pour le distinguer explicitement de taux_litiges_pct (déclaré, CRM)
     ROUND(
         COALESCE(l.nb_litiges, 0) /
         NULLIF(t.nb_transactions, 0) * 100, 2
-    )                                           AS taux_litige_reel_pct
+    )                                         AS taux_litige_reel_pct
 
 FROM tx_par_client t
 LEFT JOIN lt_par_client l ON t.client_id = l.client_id
