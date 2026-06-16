@@ -1,4 +1,3 @@
--- models/intermediate/dim_clients.sql
 -- Dimension clients enrichie : quartiles d'ancienneté + risque historique
 
 WITH source AS (
@@ -21,10 +20,10 @@ SELECT
 
     -- Buckets métier (seuils fixes, lisibles) — complément Power BI
     CASE
-        WHEN anciennete_jours <= 90  THEN 'Q1 — Très nouveau'
-        WHEN anciennete_jours <= 365 THEN 'Q2 — Nouveau'
-        WHEN anciennete_jours <= 730 THEN 'Q3 — Établi'
-        ELSE                              'Q4 — Fidèle'
+        WHEN anciennete_jours <= 90  THEN 'Nouveau'
+        WHEN anciennete_jours <= 365 THEN 'Moyen'
+        WHEN anciennete_jours <= 730 THEN 'Ancien'
+        ELSE                              'Historique'
     END AS categorie_anciennete,
 
     -- Catégorie de risque historique (taux de litiges déclaré CRM)

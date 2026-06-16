@@ -33,7 +33,7 @@ SELECT
     -- « VPN/Proxy détecté OU pays à risque élevé ou moyen »)
     CASE
         WHEN proxy_vpn_detecte = TRUE
-          OR risque_pays IN ('tres eleve', 'eleve', 'moyen') THEN TRUE
+          OR risque_pays IN ('tres eleve', 'eleve') THEN TRUE
         ELSE FALSE
     END AS est_contexte_risque
 

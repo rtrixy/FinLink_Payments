@@ -87,29 +87,7 @@ SELECT
     ROUND(
         COALESCE(l.nb_litiges, 0) /
         NULLIF(t.nb_transactions, 0) * 100, 2
-    )                                           AS taux_litige_reel_pct,
-
-    -- Score de risque global pondéré
-    ROUND(
-        (
-            t.score_risque_moyen * 0.4 +
-            t.taux_litiges_pct   * 0.3 +
-            COALESCE(l.nb_litiges, 0) / NULLIF(t.nb_transactions, 0) * 100 * 0.2 +
-            t.nb_vpn / NULLIF(t.nb_transactions, 0) * 100 * 0.1
-        ), 2
-    )                                           AS score_risque_global,
-
-    -- Catégorie de risque
-    CASE
-        WHEN t.taux_litiges_pct >= 20
-          OR t.score_risque_moyen >= 70
-          OR t.nb_vpn >= 3                       THEN 'Critique'
-        WHEN t.taux_litiges_pct >= 10
-          OR t.score_risque_moyen >= 50          THEN 'Élevé'
-        WHEN t.taux_litiges_pct >= 5
-          OR t.score_risque_moyen >= 30          THEN 'Modéré'
-        ELSE                                          'Faible'
-    END                                         AS categorie_risque
+    )                                           AS taux_litige_reel_pct
 
 FROM tx_par_client t
 LEFT JOIN lt_par_client l ON t.client_id = l.client_id
