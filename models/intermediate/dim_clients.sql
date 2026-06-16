@@ -24,14 +24,7 @@ SELECT
         WHEN anciennete_jours <= 365 THEN 'Moyen'
         WHEN anciennete_jours <= 730 THEN 'Ancien'
         ELSE                              'Historique'
-    END AS categorie_anciennete,
+    END AS categorie_anciennete
 
-    -- Catégorie de risque historique (taux de litiges déclaré CRM)
-    CASE
-        WHEN taux_litiges_pct >= 20 THEN 'Risque élevé'
-        WHEN taux_litiges_pct >= 10 THEN 'Risque modéré'
-        WHEN taux_litiges_pct >= 5  THEN 'Risque faible'
-        ELSE                             'Risque très faible'
-    END AS categorie_risque_historique
 
 FROM source

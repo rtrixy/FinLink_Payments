@@ -46,8 +46,8 @@ SELECT
     t.segment_client,
     t.anciennete_jours,
     t.categorie_anciennete,
-    t.taux_litiges_pct,
-    t.categorie_risque_historique
+    t.taux_litiges_pct
+    
 
 FROM litiges l
 LEFT JOIN fact_tx t ON l.transaction_id = t.transaction_id

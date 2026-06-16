@@ -50,7 +50,7 @@ SELECT
     c.anciennete_jours,
     c.categorie_anciennete,
     c.taux_litiges_pct,
-    c.categorie_risque_historique,
+    
 
     -- Flags transaction
     CASE WHEN t.score_risque >= 70 THEN TRUE ELSE FALSE END AS est_haut_risque,

@@ -37,8 +37,8 @@ SELECT
     -- Client
     segment_client,
     categorie_anciennete,
-    taux_litiges_pct,
-    categorie_risque_historique
+    taux_litiges_pct
+    
 
 FROM fact_lt
 ORDER BY date_litige DESC

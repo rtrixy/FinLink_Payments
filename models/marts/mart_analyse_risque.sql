@@ -21,7 +21,6 @@ tx_par_client AS (
         anciennete_jours,
         categorie_anciennete,
         taux_litiges_pct,
-        categorie_risque_historique,
 
         COUNT(transaction_id)                              AS nb_transactions,
         SUM(montant_eur)                                   AS montant_total_eur,
@@ -31,7 +30,7 @@ tx_par_client AS (
     FROM fact_tx
     GROUP BY
         client_id, segment_client, anciennete_jours,
-        categorie_anciennete, taux_litiges_pct, categorie_risque_historique
+        categorie_anciennete, taux_litiges_pct
 ),
 
 -- Agrégation litiges par client
@@ -53,7 +52,6 @@ SELECT
     t.anciennete_jours,
     t.categorie_anciennete,
     t.taux_litiges_pct,
-    t.categorie_risque_historique,
 
     -- Transactions
     t.nb_transactions,
