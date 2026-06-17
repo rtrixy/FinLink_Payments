@@ -1,4 +1,13 @@
--- Dimension clients enrichie : quartiles d'ancienneté + risque historique
+-- models/marts/dim_clients.sql
+-- Dimension clients enrichie : quartiles d'ancienneté
+
+-- NB : le champ source taux_litiges_pct (taux déclaré côté CRM, moyenne
+-- 4,02 % sur les 5000 clients) est volontairement EXCLU du modèle.
+-- Il ne correspond pas au taux réel recalculé sur les transactions
+-- (2,98 % global) et n'est mobilisé par aucune des 4 pages du dashboard.
+-- Le garder serait une colonne fantôme : présente mais jamais interrogée,
+-- source de confusion si quelqu'un l'utilise par erreur à la place du
+-- taux réel calculé en DAX sur fact_transactions.
 
 WITH source AS (
     SELECT * FROM {{ ref('base_crm_clients_staging') }}
@@ -9,7 +18,6 @@ SELECT
     segment_client,
     anciennete_jours,
     nb_achats_historique,
-    taux_litiges_pct,
     date_inscription,
 
     -- Quartile statistique d'ancienneté (NTILE : 4 groupes d'effectifs
@@ -25,6 +33,5 @@ SELECT
         WHEN anciennete_jours <= 730 THEN 'Ancien'
         ELSE                              'Historique'
     END AS categorie_anciennete
-
 
 FROM source

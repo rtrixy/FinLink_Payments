@@ -1,4 +1,4 @@
--- models/intermediate/dim_geolocation.sql
+-- models/marts/dim_geolocation.sql
 -- Dimension géolocalisation enrichie
 
 -- BUG CORRIGÉ : les modalités réelles de risque_pays sont
@@ -20,7 +20,13 @@ SELECT
     proxy_vpn_detecte,
     risque_pays,
 
-    -- Score ordinal du risque pays (4 niveaux réels)
+    -- Score ordinal du risque pays déclaré (4 niveaux réels).
+    -- NB analyse (page 2 du dashboard) : ce score déclaré n'est PAS
+    -- corrélé au taux de litige réel observé (vérifié sur les données :
+    -- Nigeria "tres eleve" -> 3,09 %, Pays-Bas "faible" -> 3,59 %).
+    -- On le conserve tel quel : il documente le dispositif EXISTANT,
+    -- la recommandation de recalibrage est traitée dans la feuille de route,
+    -- pas en réécrivant silencieusement le score ici.
     CASE risque_pays
         WHEN 'tres eleve' THEN 4
         WHEN 'eleve'      THEN 3

@@ -10,14 +10,14 @@ version: 2
 
 models:
   - name: dim_clients
-    description: "Dimension clients enrichie (quartiles d'ancienneté, risque historique)"
+    description: "Dimension clients enrichie (quartiles d'ancienneté)"
     columns:
       - name: client_id
         description: "Clé primaire client"
         tests: [unique, not_null]
 
   - name: dim_geolocation
-    description: "Dimension géolocalisation IP enrichie (score risque pays, contexte risque)"
+    description: "Dimension géolocalisation IP enrichie (score risque pays déclaré, contexte risque)"
     columns:
       - name: ip_id
         description: "Clé primaire IP"
@@ -45,7 +45,7 @@ models:
                 field: ip_id
 
   - name: fact_litiges
-    description: "Table de faits litiges (date_litige reconstruite en staging)"
+    description: "Table de faits litiges (date_litige reconstruite en staging), enrichie famille_litige"
     columns:
       - name: litige_id
         description: "Clé primaire litige"
@@ -59,15 +59,15 @@ models:
           - accepted_values:
               arguments:
                 values: ['favorable', 'defavorable', 'en cours']
+      - name: famille_litige
+        description: "Regroupement métier de type_litige — Fraude (fraude CB, non autorise) vs Commercial (les 4 autres modalités)"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Fraude', 'Commercial']
 
   - name: mart_analyse_risque
-    description: "Mart axes 1 & 2 — 1 ligne par client"
+    description: "Mart axes 1 & 2 — 1 ligne par client, agrège fact_transactions et fact_litiges"
     columns:
       - name: client_id
-        tests: [unique, not_null]
-
-  - name: mart_analyse_litige
-    description: "Mart axe 3 — 1 ligne par litige"
-    columns:
-      - name: litige_id
         tests: [unique, not_null]
