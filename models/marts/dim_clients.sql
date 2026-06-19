@@ -4,7 +4,7 @@
 -- NB : le champ source taux_litiges_pct (taux déclaré côté CRM, moyenne
 -- 4,02 % sur les 5000 clients) est volontairement EXCLU du modèle.
 -- Il ne correspond pas au taux réel recalculé sur les transactions
--- (2,98 % global) et n'est mobilisé par aucune des 4 pages du dashboard.
+-- (2,98 % global).
 -- Le garder serait une colonne fantôme : présente mais jamais interrogée,
 -- source de confusion si quelqu'un l'utilise par erreur à la place du
 -- taux réel calculé en DAX sur fact_transactions.
@@ -22,8 +22,7 @@ SELECT
 
     -- Quartile statistique d'ancienneté (NTILE : 4 groupes d'effectifs
     -- égaux ; quartile 1 = les 25 % de clients les plus récents).
-    -- Répond directement à la question Axe 1.2 : « quel quartile de
-    -- nouveaux clients présente le taux de litige le plus élevé ? »
+
     NTILE(4) OVER (ORDER BY anciennete_jours) AS quartile_anciennete,
 
     -- Buckets métier (seuils fixes, lisibles) — complément Power BI

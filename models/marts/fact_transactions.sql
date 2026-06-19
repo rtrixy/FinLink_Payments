@@ -1,18 +1,6 @@
 -- models/marts/fact_transactions.sql
 -- Table de faits : transactions enrichies avec géo et client
 
--- NB modélisation : on conserve device_type (brut, 5 modalités) ET
--- categorie_device (regroupé, 3 modalités) car les deux servent : le
--- premier pour le détail technique, le second pour les visuels Power BI
--- où un regroupement Mobile/Tablet/Desktop est plus lisible.
--- BUG CORRIGÉ (historique) : l'ancien CASE testait l'égalité stricte sur
--- 'tablet' sans wildcard -> tablet_ios/tablet_android tombaient dans
--- 'Autre'. Le LIKE 'tablet%' ci-dessous couvre les deux modalités réelles.
-
--- SUPPRIMÉ : est_haut_risque (seuil arbitraire à 70 sur score_risque,
--- ne capture que 0,6 % des transactions et score_risque ne discrimine
--- pas le risque réel observé — moyenne quasi identique avec/sans litige).
--- SUPPRIMÉ : taux_litiges_pct (champ CRM déclaré, cf. note dans dim_clients).
 
 WITH transactions AS (
     SELECT * FROM {{ ref('transactions_staging') }}
@@ -67,9 +55,6 @@ SELECT
     -- Flags transaction
     CASE WHEN t.statut = 'refuse'   THEN TRUE ELSE FALSE END AS est_refuse,
     CASE WHEN t.statut = 'approuve' THEN TRUE ELSE FALSE END AS est_approuve,
-
-    -- a_genere_litige porté ici (dénominateur du taux), pas dans
-    -- fact_litiges : voir note d'architecture dans le dossier (chap. 5.3).
     CASE WHEN lt.transaction_id IS NOT NULL THEN TRUE ELSE FALSE END AS a_genere_litige
 
 FROM transactions t

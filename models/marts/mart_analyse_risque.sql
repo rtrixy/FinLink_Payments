@@ -1,18 +1,10 @@
 -- models/marts/mart_analyse_risque.sql
 -- Mart principal : analyse du risque par client
--- Répond aux axes 1 (Q1 segment, Q2 ancienneté)
 -- Granularité : 1 ligne par client
 
 -- Ce mart agrège deux tables de faits à des granularités différentes
--- (transaction et litige) en une seule ligne par client. C'est un vrai
--- travail de consolidation, contrairement à mart_analyse_litige
--- (supprimé : simple passthrough de fact_litiges sans agrégation,
--- donc sans valeur ajoutée sur un volume de 1489 lignes que Power BI
--- agrège déjà instantanément).
+-- (transaction et litige) en une seule ligne par client.
 
--- NB : Q3 (device), Q4/Q5 (VPN/pays) sont calculées directement sur
--- fact_transactions en DAX, pas ici : ce ne sont pas des analyses
--- "par client", les pré-agréger ici aurait fait doublon inutile.
 
 WITH fact_tx AS (
     SELECT * FROM {{ ref('fact_transactions') }}

@@ -2,20 +2,9 @@
 -- Table de faits : litiges enrichis avec transaction + client + géo
 
 -- AJOUT : famille_litige (Fraude / Commercial), construite à partir des
--- 6 modalités réelles de type_litige. C'est le seul axe qui révèle un
--- vrai écart dans l'analyse (taux défavorable 61,6 % Fraude vs 38,8 %
--- Commercial — page 3 du dashboard) : la régulation carte bancaire
--- laisse peu de marge de contestation au marchand sur un cas de fraude,
--- alors qu'un litige commercial (livraison, conformité) se défend
--- souvent avec une preuve. Construite ici, dans dbt, pour rester
--- cohérent avec l'architecture du projet : la logique métier est
--- versionnée en SQL, pas éparpillée en DAX.
+-- 6 modalités réelles de type_litige. 
 
--- SUPPRIMÉ : est_defavorable / est_favorable / est_en_cours (3 booléens
--- qui ne faisaient que recopier la colonne issue déjà propre à 3
--- modalités). Les mesures DAX filtrent directement sur issue.
--- SUPPRIMÉ : est_haut_risque, taux_litiges_pct (cf. notes dans
--- fact_transactions et dim_clients).
+
 
 WITH litiges AS (
     SELECT * FROM {{ ref('logs_litiges_staging') }}
