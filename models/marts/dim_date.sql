@@ -1,4 +1,4 @@
--- models/intermediate/dim_date.sql
+-- models/mart/dim_date.sql
 WITH date_spine AS (
     SELECT date
     FROM UNNEST(
