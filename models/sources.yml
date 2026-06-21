@@ -9,3 +9,7 @@ sources:
       - name: ip_geolocation
       - name: logs_litiges
       - name: base_crm_clients
+
+
+#Je déclare mes 4 sources brutes une seule fois ici. Tout le reste y fait référence via
+# source() — si le dataset change, je ne corrige qu'à un endroit. 
